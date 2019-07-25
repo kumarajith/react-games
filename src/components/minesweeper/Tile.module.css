@@ -1,0 +1,20 @@
+.TileClosed {
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
+    font-size: 30px;
+    text-align: center;
+    background-color:#333;
+    box-shadow: inset 0px 0px 0px 5px rgb(68, 211, 168);
+}
+
+.TileOpen {
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
+    font-size: 30px;
+    text-align: center;
+    background-color:rgb(214, 194, 194);
+    box-shadow: inset 0px 0px 0px 5px rgb(68, 211, 168);
+}
+  

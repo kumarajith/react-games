@@ -1,5 +1,5 @@
 import React from 'react';
-import Minesweeper from './containers/minesweeper/Game';
+import Minesweeper from './containers/Minesweeper/Minesweeper';
 import './App.css';
 
 function App() {

@@ -1,3 +1,4 @@
 .GameRow {
     display: flex;
+    width: fit-content;
 }

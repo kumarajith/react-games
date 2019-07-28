@@ -1,9 +1,11 @@
 import React from 'react';
 import Slider from './Slider/Slider';
+import Button from '../Button/Button';
+import classes from './SliderControls.module.css';
 
 const sliderControls = (props) => {
     return (
-        <div>
+        <div className={classes.Container}>
             <Slider 
                 label="Height"
                 min={props.min}
@@ -25,6 +27,9 @@ const sliderControls = (props) => {
                 value={props.mines}
                 changeHandler={(event) => props.onSliderChangeHandler(event, 'mines')}
             />
+            <Button
+                btnType="Success"
+                clicked={props.resetHandler}>Play</Button>
         </div>
     );
 }

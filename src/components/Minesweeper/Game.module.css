@@ -2,3 +2,6 @@
     display: flex;
     width: fit-content;
 }
+.Container {
+    display: inline-block;
+}

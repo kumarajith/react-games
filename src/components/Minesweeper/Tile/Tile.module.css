@@ -5,7 +5,7 @@
     font-size: 30px;
     text-align: center;
     background-color:#333;
-    box-shadow: inset 0px 0px 0px 5px rgb(68, 211, 168);
+    box-shadow: inset 0px 0px 0px 5px #4CAF50;
 }
 
 .TileOpen {
@@ -15,6 +15,6 @@
     font-size: 30px;
     text-align: center;
     background-color:rgb(214, 194, 194);
-    box-shadow: inset 0px 0px 0px 5px rgb(68, 211, 168);
+    box-shadow: inset 0px 0px 0px 5px #4CAF50;
 }
   

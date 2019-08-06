@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Tile from './Tile/Tile'
 import classes from './Game.module.css';
-import {MINE_STATUS, MINE_CLICK} from '../../constants/constants';
+import {TILE_STATUS, TILE_CLICK} from '../../constants/constants';
 class Game extends Component {
     
     directions = [
@@ -18,6 +18,7 @@ class Game extends Component {
     state = {
         playing: true,
         tileStatus: null,
+        firstClick: true,
         mines: null,
         width: null,
         height: null,
@@ -28,7 +29,7 @@ class Game extends Component {
         var tileStatus = new Array(this.state.height);
         var mines = new Array(this.state.height);
         for (var i = 0; i < this.state.height; i++) {
-            tileStatus[i] = new Array(this.state.width).fill(MINE_STATUS.CLOSED);
+            tileStatus[i] = new Array(this.state.width).fill(TILE_STATUS.CLOSED);
             mines[i] = new Array(this.state.width).fill(0);
         }
         const mineLocations = new Set();
@@ -68,7 +69,8 @@ class Game extends Component {
                 playing: false, 
                 width: props.width, 
                 height: props.height, 
-                mineCount: props.mineCount
+                mineCount: props.mineCount,
+                firstClick: true
             }
         }
         return state;
@@ -90,12 +92,20 @@ class Game extends Component {
         let updatedTileStatus = this.state.tileStatus.map(function(arr) {
             return arr.slice();
         });
+        let updatedMines = this.state.mines.map(function(arr) {
+            return arr.slice();
+        });
         let status = updatedTileStatus[id.x][id.y];
         let newStatus = status;
-        if (status === MINE_STATUS.CLOSED) {
-            if (event.button === MINE_CLICK.LEFT) {
-                newStatus = MINE_STATUS.OPEN;
-                if (this.state.mines[id.x][id.y] === -1) {
+        if (status === TILE_STATUS.CLOSED) {
+            if (event.button === TILE_CLICK.LEFT) {
+                if (this.state.firstClick) {
+                    let freeSpaces = (this.props.width * this.props.height) - this.props.mineCount;
+                    updatedMines = this.moveInitialMines(updatedMines, id, freeSpaces >= 9);
+                    console.log(updatedMines);
+                }
+                newStatus = TILE_STATUS.OPEN;
+                if (updatedMines[id.x][id.y] === -1) {
                     this.setState({playing: false});
                     this.props.onGameOver();
                 } else {
@@ -103,28 +113,29 @@ class Game extends Component {
                     for (var i = 0; i < visited.length; i++) {
                         visited[i] = new Array(this.state.width).fill(false);
                     }
-                    updatedTileStatus = this.updateStatuses(id, updatedTileStatus, visited);
+                    updatedTileStatus = this.openTiles(id, updatedTileStatus, visited, updatedMines);
                 }
-            } else if (event.button === MINE_CLICK.RIGHT) {
-                newStatus = MINE_STATUS.FLAGGED;
+            } else if (event.button === TILE_CLICK.RIGHT) {
+                newStatus = TILE_STATUS.FLAGGED;
             }
-        } else if (status === MINE_STATUS.FLAGGED) {
-            if (event.button === MINE_CLICK.RIGHT) {
-                newStatus = MINE_STATUS.CLOSED
+        } else if (status === TILE_STATUS.FLAGGED) {
+            if (event.button === TILE_CLICK.RIGHT) {
+                newStatus = TILE_STATUS.CLOSED
             }
         }
         updatedTileStatus[id.x][id.y] = newStatus;
-        this.setState({tileStatus: updatedTileStatus});
-        if (this.hasWonGame(updatedTileStatus)) {
+        this.setState({tileStatus: updatedTileStatus, mines: updatedMines, firstClick: false});
+        if (this.hasWonGame(updatedTileStatus, updatedMines)) {
             this.setState({playing: false});
             this.props.gameWon();
         }
     }
-    hasWonGame = (tileStatus) => {
+    
+    hasWonGame = (tileStatus, mines) => {
         var openCount = 0;
         for (var i = 0; i < tileStatus.length; i++) {
             for (var j = 0; j < tileStatus[i].length; j++) {
-                if (this.state.mines[i][j] !== -1 && tileStatus[i][j] === MINE_STATUS.OPEN) {
+                if (mines[i][j] !== -1 && tileStatus[i][j] === TILE_STATUS.OPEN) {
                     openCount++;
                 }
             }
@@ -134,36 +145,128 @@ class Game extends Component {
         }
         return false;
     }
-    updateStatuses = (id, tileStatus, visited) => {
+
+    openTiles = (id, tileStatus, visited, mines) => {
         if (visited[id.x][id.y]) {
             return tileStatus;
         }
         visited[id.x][id.y] = true;
-        var currentTile = this.state.mines[id.x][id.y];
+        var currentTile = mines[id.x][id.y];
         for (let direction of this.directions) {
-            if (direction.x === 0 && direction.y === 0) {
-                continue;
-            }
             let currentX = id.x + direction.x;
             let currentY = id.y + direction.y;
             if (currentX < 0 || currentX >= this.state.height || currentY < 0 || currentY >= this.state.width) {
                 continue;
             }
             if (currentTile > 0) {
-                if (this.state.mines[currentX][currentY] === 0) {
-                    tileStatus[currentX][currentY] = MINE_STATUS.OPEN;
-                    tileStatus = this.updateStatuses({x:currentX, y:currentY}, tileStatus, visited)
+                if (mines[currentX][currentY] === 0) {
+                    tileStatus[currentX][currentY] = TILE_STATUS.OPEN;
+                    tileStatus = this.openTiles({x:currentX, y:currentY}, tileStatus, visited, mines)
                 }
             } else if (currentTile === 0) {
-                if (this.state.mines[currentX][currentY] >= 0) {
-                    tileStatus[currentX][currentY] = MINE_STATUS.OPEN;
-                    tileStatus = this.updateStatuses({x:currentX, y:currentY}, tileStatus, visited)
+                if (mines[currentX][currentY] >= 0) {
+                    tileStatus[currentX][currentY] = TILE_STATUS.OPEN;
+                    tileStatus = this.openTiles({x:currentX, y:currentY}, tileStatus, visited, mines)
                 }
             }
         }
         
         return tileStatus;
     }
+
+    moveInitialMines = (mines, id, moveNearby) => {
+        if (moveNearby) {
+            for (let direction of this.directions) {
+                let currentX = id.x + direction.x;
+                let currentY = id.y + direction.y;
+                if (currentX < 0 || currentX >= this.state.height || currentY < 0 || currentY >= this.state.width) {
+                    continue;
+                }
+
+                if (mines[currentX][currentY] !== -1) {
+                    continue;
+                }
+
+                outer:
+                for (let i = 0; i < mines.length; i++) {
+                    for (let j = 0; j < mines[i].length; j++) {
+                        if ((i >= id.x-1 && i <= id.x+1) && (j >= id.y-1 && j <= id.y+1)) {
+                            continue;
+                        }
+                        if (mines[i][j] !== -1) {
+                            mines = this.moveMine(mines, {x: currentX, y:currentY}, {x: i, y: j});
+                            break outer;
+                        }
+                    }
+                }
+            }
+        }
+        if (mines[id.x][id.y] === -1) {
+            for (let i = 0; i < mines.length; i++) {
+                for (let j = 0; j < mines[i].length; j++) {
+                    if (moveNearby) {
+                        if ((i >= id.x-1 && i <= id.x+1) && (j >= id.y-1 && j <= id.y+1)) {
+                            continue;
+                        }
+                    }
+                    if (mines[i][j] !== -1) {
+                        mines = this.moveMine(mines, id, {x: i, y: j});
+                        return mines;
+                    }
+                }
+            }
+        }
+        return mines;
+    }
+
+    moveMine = (mines, from, to) => {
+        console.log(from);
+        console.log(to);
+        let fromCount = 0;
+        mines[from.x][from.y] = 0;
+        mines[to.x][to.y] = -1;
+        for (let direction of this.directions) {
+            let fromX = from.x + direction.x;
+            let fromY = from.y + direction.y;
+            if (!(fromX < 0 || fromX >= this.state.height || fromY < 0 || fromY >= this.state.width)) {
+                let fromMine = mines[fromX][fromY];
+                if (fromMine === -1) {
+                    fromCount++;
+                } else {
+                    mines[fromX][fromY]--;
+                }
+            }
+            let toX = to.x + direction.x;
+            let toY = to.y + direction.y;
+            if (!(toX < 0 || toX >= this.state.height || toY < 0 || toY >= this.state.width)) {
+                let toMine = mines[toX][toY];
+                if (toMine !== -1) {
+                    mines[toX][toY]++;
+                }
+            }
+        }
+        mines[from.x][from.y] = fromCount;
+        console.log(mines);
+        return mines;
+    }
+
+    // getNearByMineCount = (mines, id) => {
+    //     let count = 0;
+    //     for (let direction of this.directions) {
+    //         if (direction.x === 0 && direction.y === 0) {
+    //             continue;
+    //         }
+    //         let currentX = id.x + direction.x;
+    //         let currentY = id.y + direction.y;
+    //         if (currentX < 0 || currentX >= this.state.height || currentY < 0 || currentY >= this.state.width) {
+    //             continue;
+    //         }
+    //         if (mines[currentX][currentY] === -1) {
+    //             count++;
+    //         }
+    //     }
+    //     return count;
+    // }
 
     render () {
         var tiles = null;
@@ -181,10 +284,6 @@ class Game extends Component {
                     className={classes.GameRow}>{rowTiles}</div>;
             }, this);
         }
-        // var tiles = <Tile 
-        //     clicked={(event) => this.tileClickedHandler(event, {x:0,y:index})} 
-        //     text='&#128681;'
-        //     status={this.state.tileStatus[0][0]}/>;
 
         return (
             <div className={classes.Container}>

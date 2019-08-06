@@ -8,12 +8,12 @@ Modal.setAppElement('#root');
 
 class Minesweeper extends Component {
     state = {
-        min: 1,
+        min: 2,
         max: 100,
         maxMines: 99,
         height: 5,
         width: 5,
-        mines: 24,
+        mines: 10,
         reset: true,
         modalIsOpen: true,
         gameState: GAME_STATUS.IN_PROGRESS
@@ -30,10 +30,19 @@ class Minesweeper extends Component {
         }
     };
 
+    componentDidMount() {
+        console.log("did mount");
+        this.setState({maxMines: (this.state.height * this.state.width) - 1})
+    }
+
     onSliderChangeHandler = (event, type) => {
-        this.setState({[type]: parseInt(event.target.value, 10), maxMines: ((this.state.height * this.state.width) - 1)});
-        if (this.state.mines > this.state.maxMines) {
-            this.setState({mines: this.state.maxMines});
+        if (type === 'mines') {
+            var max = Math.min(event.target.value, this.state.maxMines);
+            this.setState({mines: max});
+        } else {
+            var maxMines = (event.target.value * (type === 'height' ? this.state.width : this.state.height)) - 1;
+            var mines = Math.min(this.state.mines, maxMines);
+            this.setState({[type]: parseInt(event.target.value, 10), maxMines: maxMines, mines: mines});
         }
     }
 

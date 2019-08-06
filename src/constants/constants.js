@@ -1,10 +1,10 @@
-export const MINE_STATUS = {
+export const TILE_STATUS = {
     OPEN: 0,
     CLOSED: 1,
     FLAGGED: 2
 }
 
-export const MINE_CLICK = {
+export const TILE_CLICK = {
     LEFT: 0,
     RIGHT: 2
 }

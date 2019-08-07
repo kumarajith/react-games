@@ -31,7 +31,6 @@ class Minesweeper extends Component {
     };
 
     componentDidMount() {
-        console.log("did mount");
         this.setState({maxMines: (this.state.height * this.state.width) - 1})
     }
 

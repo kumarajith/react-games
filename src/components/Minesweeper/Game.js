@@ -58,7 +58,6 @@ class Game extends Component {
                 mines[i][j] = currentCount;
             }
         }
-        console.log(mines);
         this.setState({tileStatus:tileStatus, mines: mines, playing: true});
     }
     static getDerivedStateFromProps(props, state) {
@@ -102,7 +101,6 @@ class Game extends Component {
                 if (this.state.firstClick) {
                     let freeSpaces = (this.props.width * this.props.height) - this.props.mineCount;
                     updatedMines = this.moveInitialMines(updatedMines, id, freeSpaces >= 9);
-                    console.log(updatedMines);
                 }
                 newStatus = TILE_STATUS.OPEN;
                 if (updatedMines[id.x][id.y] === -1) {
@@ -220,8 +218,6 @@ class Game extends Component {
     }
 
     moveMine = (mines, from, to) => {
-        console.log(from);
-        console.log(to);
         let fromCount = 0;
         mines[from.x][from.y] = 0;
         mines[to.x][to.y] = -1;
@@ -246,27 +242,8 @@ class Game extends Component {
             }
         }
         mines[from.x][from.y] = fromCount;
-        console.log(mines);
         return mines;
     }
-
-    // getNearByMineCount = (mines, id) => {
-    //     let count = 0;
-    //     for (let direction of this.directions) {
-    //         if (direction.x === 0 && direction.y === 0) {
-    //             continue;
-    //         }
-    //         let currentX = id.x + direction.x;
-    //         let currentY = id.y + direction.y;
-    //         if (currentX < 0 || currentX >= this.state.height || currentY < 0 || currentY >= this.state.width) {
-    //             continue;
-    //         }
-    //         if (mines[currentX][currentY] === -1) {
-    //             count++;
-    //         }
-    //     }
-    //     return count;
-    // }
 
     render () {
         var tiles = null;
